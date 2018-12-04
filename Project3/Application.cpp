@@ -190,33 +190,59 @@ int main(int argc, char* argv[]) {
 
 using namespace std;
 
+stringstream ss(std::ios_base::ate | std::ios_base::in | std::ios_base::out);
+
 struct A
 {
     std::string s;
     int k;
     A() : s("test"), k(-1) {}
-    A(const A& o) : s(o.s), k(o.k) { std::cout << "move failed@!!!\n"; }
+    A(const A& o) : s(o.s), k(o.k) 
+    { 
+        std::cout << "move failed@!!!\n";
+    }
     A(A&& o) noexcept :
-        s(std::move(o.s)),
-        k(std::exchange(o.k, 0)) {}
+        //s(std::move(o.s)),
+        s(o.s),
+        k(std::exchange(o.k, 0)) {
+
+        std::cout << "move constructor.\n";
+    }
 
     A& operator=(const A& o) 
     {
         s = o.s;
         k = o.k;
+        std::cout << "¡á¡á¡á copy assigned ¡á¡á¡á\n";
         return *this;
     }
 
     A& operator=(A&& o) 
     { 
-        s = std::move(o.s);
-        k = std::exchange(k, -1);
+        //s = std::move(o.s);
+        s = o.s;
+        k = std::exchange(o.k, -1);
+        std::cout << "¡à¡à¡àmove assigned¡à¡à¡à\n";
         return *this; 
     }
 };
 
 A func(A a)
 {
+    //stringstream ss(std::ios_base::ate|std::ios_base::in|std::ios_base::out);
+
+    ss.clear();
+    ss.str("");
+
+    ss << "aaaa";
+
+    ss << "bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb "
+        "bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb "
+        "bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb "
+        "bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb "
+        "bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb bbbb ";
+    a.s = ss.str();
+
     return a;
 }
 
@@ -266,20 +292,22 @@ void print() {
     v.clear();
 }
 
+void run01() 
+{
+    for (int i = 0; i < 100000000; i++) {
+        add();
+        print();
+        this_thread::sleep_for(chrono::milliseconds(250ms));
+    }
+}
 
-int main(int argc, char* argv[]) {
-
-    //for (int i = 0; i < 100000000; i++) {
-    //    add();
-    //    print();
-    //    this_thread::sleep_for(chrono::milliseconds(250ms));
-    //}
-
-    for (int i = 0; i < 100000; i++) 
+void run02()
+{
+    for (int i = 0; i < 100000000; i++) 
     {
         std::cout << "Trying to move A\n";
         A a1;
-        for (int j = 0; j < 10000; j++)
+        for (int j = 0; j < 1000000000; j++)
             a1 = func(A()); // return by value move-constructs the target from the function parameter
         std::cout << "Befoer move, a1.s = " << std::quoted(a1.s) << " a1.k = " << a1.k << '\n';
         A a2 = std::move(a1); // move-constructs from xvalue
@@ -302,6 +330,20 @@ int main(int argc, char* argv[]) {
         this_thread::sleep_for(chrono::microseconds(1us));
 
     }
+}
+
+
+int main(int argc, char* argv[]) {
+
+    //thread t1(run01);
+    thread t2(run02);
+
+    this_thread::sleep_for(chrono::minutes(20min));
+
+    //t1.join();
+    t2.join();
+
+
     return 0;
 }
 
